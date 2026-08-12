@@ -1,0 +1,11 @@
+# Local tooling / editor
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# OS / misc
+.DS_Store
+Thumbs.db
