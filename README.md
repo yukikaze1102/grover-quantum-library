@@ -29,11 +29,13 @@ k_opt = round((π/2 − θ) / 2θ),    θ = arcsin(√(M/N))
 ## 2. 文件结构
 
 ```
-├── grover_512_library.py      # 主程序：构建并运行 Grover 电路，打印结果
+├── grover_512_library.py      # 主程序：构建并运行 Grover 电路，打印结果（512 版本，模拟器）
 ├── make_figures.py            # 生成三张演示用图
 ├── grover_circuit.png         # 电路图（1 次迭代的真实电路，实际运行 12 次）
 ├── grover_results.png         # 结果直方图（512 本书的测量概率）
 ├── grover_amplification.png   # 分析图：命中概率 vs 迭代次数 P(k)
+├── grover_hardware.py         # 真机对比脚本（8-item，模拟器 vs 真实量子硬件）
+├── hardware_vs_simulator.png  # 真机 vs 模拟器对比图
 └── README.md
 ```
 
@@ -44,9 +46,10 @@ k_opt = round((π/2 − θ) / 2θ),    θ = arcsin(√(M/N))
 - Python ≥ 3.10
 - `qiskit` ≥ 2.x，`qiskit-aer`
 - 绘图可选：`matplotlib`、`pylatexenc`（Qiskit mpl 电路图需要）
+- 真机运行：`qiskit-ibm-runtime`（可选，离线用假设备则不需要）
 
 ```bash
-pip install qiskit qiskit-aer matplotlib pylatexenc
+pip install qiskit qiskit-aer matplotlib pylatexenc qiskit-ibm-runtime
 ```
 
 ---
@@ -78,6 +81,35 @@ All 510 unmarked books combined:      0.00%
 
 > 每次运行结果在 ±20 左右浮动，但两本目标书总和始终 ≈ 100%。需要精确复现可加
 > `seed_simulator=42`（`make_figures.py` 已默认使用）。
+
+---
+
+## 4.5 真机运行（Slide 5 素材）
+
+`grover_hardware.py` 把 8-item（N=8, M=2, k=1）Grover 电路跑在三种方式上并出对比图
+`hardware_vs_simulator.png`：
+
+| 方式 | 说明 |
+|---|---|
+| Ideal（模拟器） | 无噪声，目标书各 ~50%（合计 100%） |
+| 原始设备噪声 | Aer + 设备噪声模型，**不做误差缓解**（目标书合计 ~85%） |
+| 真机 + 缓解 | Qiskit Runtime `SamplerV2`（内置测量误差缓解） |
+
+```bash
+# 离线演示（无 token 时自动回退到 FakeBrisbane 噪声模型，可直接跑）
+python grover_hardware.py
+
+# 跑真实 IBM 量子硬件（需要免费账号 token）
+IBM_QUANTUM_TOKEN=xxxxxxxx python grover_hardware.py
+# 可选指定后端：IBM_BACKEND=ibm_brisbane
+```
+
+**获取 token**：在 [IBM Quantum Platform](https://quantum.ibm.com/) 注册免费账号 →
+Dashboard → API token（勾选 Access **Real time** systems）。
+
+> 8-item 电路只有 18 个 CNOT，深度 35，远在相干时间内，真机跑得动；
+> 512-item 电路 9,072 个 CNOT 则超出现役芯片能力——这就是 Slide 5 的论点：
+> **"qubits are cheap, depth is the bottleneck."**
 
 ---
 
